@@ -1,0 +1,51 @@
+#Load dataset
+url = ' https://bit.ly/3da1GlI'
+messages = pd.read_csv(url, sep ='\t',names=["label", "message"])
+messages[:3]
+
+# Get all the ham and spam emails
+ham_msg = messages[messages.label =='ham']
+spam_msg = messages[messages.label=='spam']
+
+# Create numpy list to visualize using wordcloud
+ham_msg_text = " ".join(ham_msg.message.to_numpy().tolist())
+spam_msg_text = " ".join(spam_msg.message.to_numpy().tolist())
+
+# wordcloud of ham messages
+ham_msg_cloud = WordCloud(width =600, height =300, stopwords=STOPWORDS,max_font_size=60, background_color ="white", colormap='green').generate(ham_msg_text)
+plt.figure(figsize=(20,10))
+plt.imshow(ham_msg_cloud, interpolation='bilinear')
+plt.axis('off') # turn off axis
+plt.show()
+
+# wordcloud of spam messages,that extract common spam messages
+spam_msg_cloud = WordCloud(width =600, height =3000, stopwords=STOPWORDS,max_font_size=60, background_color ="white", colormap='green').generate(spam_msg_text)
+plt.figure(figsize=(50,20))
+plt.imshow(spam_msg_cloud, interpolation='bilinear')
+plt.axis('off') 
+plt.show()
+
+# we can observe imbalance data here 
+plt.figure(figsize=(50,20))
+sns.countplot(messages.label)
+# Percentage of spam messages
+(len(spam_msg)/len(ham_msg))*100 
+
+# one way to fix it is to downsample the ham msg
+ham_msg_df = ham_msg.sample(n = len(spam_msg), random_state = 50)
+spam_msg_df = spam_msg
+print(ham_msg_df.shape, spam_msg_df.shape)
+(600, 2) (600, 2)
+
+# Create a dataframe with these ham and spam msg
+msg_df = ham_msg_df.append(spam_msg_df).reset_index(drop=True)
+plt.figure(figsize=(50,20))
+sns.countplot(msg_df.label)
+plt.title('Distribution of ham and spam email messages (after downsampling)')
+plt.xlabel('Message types')
+
+# Get length column for each text
+msg_df['text_length'] = msg_df['message'].apply(len)
+#Calculate average length by label types
+labels = msg_df.groupby('label').mean()
+labels
